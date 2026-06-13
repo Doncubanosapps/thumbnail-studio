@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DoncubanoYTV — AI Thumbnail Studio</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08080D;--panel:#0F0F16;--panel2:#15151E;--panel3:#1C1C28;
+  --border:#252535;--border2:#303048;
+  --red:#CC2200;--orange:#FF8800;--green:#00CC55;--blue:#4488FF;
+  --text:#E0E0F0;--muted:#5A5A80;--muted2:#7A7AA0;
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:13px;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+header{background:var(--panel);border-bottom:1px solid var(--border);padding:0 14px;display:flex;align-items:center;gap:10px;height:48px;flex-shrink:0}
+.logo{font-size:14px;font-weight:800}.logo b{color:var(--red)}.logo i{color:var(--orange);font-style:normal}
+.badge{font-size:9px;font-weight:800;padding:2px 6px;border-radius:3px;letter-spacing:1px}
+.b-red{background:var(--red);color:#fff}
+.tabs{display:flex;gap:2px;margin-left:10px}
+.tab{padding:6px 13px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted2);transition:all .15s;border:1px solid transparent;user-select:none}
+.tab:hover{color:var(--text);background:var(--panel2)}
+.tab.on{color:var(--text);background:var(--panel3);border-color:var(--border2)}
+.hdr-r{margin-left:auto;display:flex;gap:6px;align-items:center}
+/* API KEY BAR */
+#apiBar{background:#0A0A18;border-bottom:1px solid #2A2A50;padding:8px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+#apiBar label{font-size:11px;color:var(--muted2);white-space:nowrap}
+#apiKey{background:#111120;border:1px solid #2A2A50;color:var(--text);padding:5px 10px;border-radius:4px;font-size:12px;font-family:monospace;flex:1;max-width:380px}
+#apiKey:focus{outline:none;border-color:var(--blue)}
+#apiStatus{font-size:11px;font-weight:600}
+/* BTNs */
+button{padding:6px 13px;border-radius:4px;border:none;cursor:pointer;font-size:12px;font-weight:700;transition:all .15s}
+.btn-r{background:var(--red);color:#fff}.btn-r:hover{background:#EE2800}
+.btn-o{background:var(--orange);color:#000}.btn-o:hover{background:#FF9900}
+.btn-g{background:var(--green);color:#000}.btn-g:hover{background:#00EE66}
+.btn-gh{background:var(--panel2);color:var(--text);border:1px solid var(--border2)}.btn-gh:hover{background:var(--panel3)}
+/* VIEWS */
+.view{display:none;flex:1;overflow:hidden;min-height:0}.view.on{display:flex}
+/* RESEARCH */
+.r-wrap{display:flex;flex:1;overflow:hidden;min-height:0}
+.r-left{width:300px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--border);overflow-y:auto}
+.r-right{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.blk{padding:12px;border-bottom:1px solid var(--border)}
+.blk h3{font-size:10px;font-weight:800;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--red);flex-shrink:0}
+select,textarea{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:4px;font-size:12px;width:100%;font-family:inherit;cursor:pointer}
+input[type=text]{background:var(--panel2);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:4px;font-size:12px;width:100%;font-family:inherit}
+input[type=range]{width:100%;accent-color:var(--red)}
+input[type=color]{width:100%;height:28px;border:1px solid var(--border);border-radius:4px;background:var(--panel2);cursor:pointer;padding:1px}
+.lbl{display:block;font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.fr{margin-bottom:9px}
+.fr .v{float:right;color:var(--orange);font-weight:700;font-size:11px}
+.card{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:12px}
+.card h4{font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;margin-bottom:9px}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.mbox{background:var(--panel3);border-radius:5px;padding:9px;text-align:center;border:1px solid var(--border)}
+.mval{font-size:26px;font-weight:800;line-height:1;margin-bottom:2px}
+.mlbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.c-or{color:var(--orange)}.c-rd{color:var(--red)}.c-gr{color:var(--green)}.c-bl{color:var(--blue)}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+.tag{background:var(--panel3);border:1px solid var(--border2);border-radius:3px;padding:3px 8px;font-size:11px;color:var(--muted2);cursor:pointer;transition:all .15s}
+.tag.hot{border-color:var(--orange);color:var(--orange);background:#1A0D00}
+.outbox{background:var(--panel3);border:1px solid var(--border2);border-radius:5px;padding:10px;font-size:12px;line-height:1.7;color:var(--muted2);white-space:pre-wrap;min-height:50px}
+.idea{background:var(--panel3);border:1px solid var(--border);border-radius:5px;padding:9px;margin-bottom:6px;cursor:pointer;transition:all .15s}
+.idea:hover{border-color:var(--orange)}.idea.sel{border-color:var(--red);background:#150500}
+.idea-t{font-weight:700;font-size:13px;color:var(--text);margin-bottom:3px}
+.idea-m{font-size:11px;color:var(--muted2)}
+.sc-hi{color:var(--green)}.sc-md{color:var(--orange)}.sc-lo{color:var(--red)}
+.pill{background:var(--panel3);border:1px solid var(--border);border-radius:4px;padding:8px;font-size:11px;color:var(--muted);line-height:1.7}
+.pill strong{color:var(--text)}
+#resStatus{padding:7px 14px;font-size:12px;font-weight:600;min-height:32px;border-top:1px solid var(--border);background:var(--panel);flex-shrink:0;color:var(--muted)}
+/* STUDIO */
+.s-wrap{display:flex;flex:1;overflow:hidden;min-height:0}
+.s-left{width:255px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--border);overflow-y:auto}
+.s-canvas{flex:1;display:flex;align-items:center;justify-content:center;background:#030305;position:relative;overflow:hidden}
+.s-right{width:230px;flex-shrink:0;background:var(--panel);border-left:1px solid var(--border);overflow-y:auto}
+#cv{display:block;box-shadow:0 0 50px #000;cursor:crosshair;max-width:100%;max-height:100%}
+.upz{border:2px dashed var(--border2);border-radius:5px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .15s;background:var(--panel2)}
+.upz:hover,.upz.over{border-color:var(--red);background:#150404}
+.upz.ok{border-color:var(--green);border-style:solid}
+.upz .ic{font-size:20px;margin-bottom:3px}
+.upz p{font-size:11px;color:var(--muted);line-height:1.4;pointer-events:none}
+.upz.ok p{color:var(--green);font-weight:600}
+.upz .ubtn{display:inline-block;margin-top:5px;padding:3px 10px;background:var(--panel3);border:1px solid var(--border2);border-radius:3px;font-size:10px;color:var(--muted2);pointer-events:none}
+.lrow{background:var(--panel2);border:1px solid var(--border);border-radius:4px;padding:6px 8px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:4px;transition:border-color .15s}
+.lrow:hover,.lrow.on{border-color:var(--red)}
+.ldot{width:9px;height:9px;border-radius:50%;flex-shrink:0;border:1px solid #444}
+.ltxt{flex:1;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ldel{color:var(--muted);font-size:14px;line-height:1;cursor:pointer}
+.ldel:hover{color:var(--red)}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.ptile{background:var(--panel2);border:1px solid var(--border);border-radius:4px;padding:6px 4px;text-align:center;cursor:pointer;font-size:10px;font-weight:700;color:var(--muted2);text-transform:uppercase;transition:all .15s}
+.ptile:hover{border-color:var(--orange);color:var(--orange)}
+.tr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.tl{font-size:11px;color:var(--muted2)}
+.tog{position:relative;width:30px;height:16px}
+.tog input{opacity:0;width:0;height:0}
+.togs{position:absolute;inset:0;background:#222;border-radius:16px;cursor:pointer;transition:.2s}
+.togs:before{content:'';position:absolute;width:10px;height:10px;left:3px;top:3px;background:#888;border-radius:50%;transition:.2s}
+.tog input:checked+.togs{background:var(--red)}
+.tog input:checked+.togs:before{background:#fff;transform:translateX(14px)}
+.ai-bar{position:absolute;bottom:0;left:0;right:0;background:#0A0A18;border-top:1px solid var(--border);padding:8px}
+.ai-bar textarea{resize:none;font-size:11px;border-color:#2A2A50;background:#0D0D22;color:var(--text);margin-bottom:6px;width:100%;border-radius:4px;padding:6px;font-family:inherit;border:1px solid #2A2A50}
+.ai-row{display:flex;gap:5px}
+#stStatus{font-size:11px;color:var(--muted);margin-top:5px;min-height:14px;word-break:break-all}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.dv{height:1px;background:var(--border);margin:7px 0}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><b>DON</b>CUBANO<i>YTV</i></div>
+  <span class="badge b-red">AI STUDIO</span>
+  <div class="tabs">
+    <div class="tab on" id="tabR" onclick="showTab('research')">🔍 Research &amp; SEO</div>
+    <div class="tab" id="tabS" onclick="showTab('studio')">🎨 Thumbnail Studio</div>
+  </div>
+  <div class="hdr-r">
+    <button class="btn-gh" onclick="exportPNG()">⬇ Export PNG</button>
+    <button class="btn-o" onclick="autoGenerate()">⚡ AUTO GENERATE</button>
+  </div>
+</header>
+
+<!-- CORS WARNING - shown when opened via file:// -->
+<div id="corsWarn" style="display:none;background:#2A0A00;border-bottom:2px solid #FF4400;padding:8px 14px;font-size:12px;color:#FF8866;font-weight:600;flex-shrink:0">
+  ⚠ CORS ERROR: You opened this as a file. Use <strong style="color:#FFAA00">START_THUMBNAIL_STUDIO.bat</strong> instead — double-click that file to start the app correctly. The API will not work until you do this.
+</div>
+
+<!-- API KEY BAR -->
+<div id="apiBar">
+  <label>🔑 Anthropic API Key:</label>
+  <input type="password" id="apiKey" placeholder="sk-ant-api03-..." oninput="saveKey()">
+  <button class="btn-gh" onclick="testKey()" style="white-space:nowrap">Test Connection</button>
+  <span id="apiStatus" style="color:var(--muted)">Enter your API key from console.anthropic.com</span>
+</div>
+
+<!-- RESEARCH TAB -->
+<div class="view on" id="view-research">
+<div class="r-wrap">
+  <div class="r-left">
+    <div class="blk">
+      <h3><span class="dot"></span>Video Info</h3>
+      <div class="fr"><label class="lbl">Game</label>
+        <select id="gGame">
+          <option>The Front</option><option>Escape from Tarkov</option>
+          <option>Hunt: Showdown</option><option>The Cycle Frontier</option><option>Rust</option>
+        </select>
+      </div>
+      <div class="fr"><label class="lbl">Video Type</label>
+        <select id="gType">
+          <option>Base Raid</option><option>PVP Highlights</option><option>Solo Survival</option>
+          <option>Loot Run</option><option>Base Building</option><option>Wipe Day</option>
+          <option>Tips &amp; Tricks</option><option>Beginner Guide</option>
+        </select>
+      </div>
+      <div class="fr"><label class="lbl">Extra Context (optional)</label>
+        <textarea id="gCtx" rows="2" placeholder="e.g. solo raided a 5-man clan base"></textarea>
+      </div>
+      <button class="btn-r" style="width:100%" onclick="runResearch()">🔍 Analyze &amp; Research</button>
+    </div>
+    <div class="blk">
+      <h3><span class="dot" style="background:var(--orange)"></span>Channel</h3>
+      <div class="pill"><strong>@DoncubanoYTV</strong><br>Life coach + dad gamer<br>The Front, EFT, Hunt: Showdown<br>Audience: 18–35 survival/FPS</div>
+    </div>
+    <div class="blk">
+      <h3><span class="dot" style="background:var(--green)"></span>Selected Title</h3>
+      <div id="selTitleBox" class="pill">Run analysis first</div>
+      <button class="btn-g" style="width:100%;margin-top:7px" onclick="sendToStudio()">→ Send to Studio &amp; Auto Generate</button>
+    </div>
+  </div>
+  <div class="r-right">
+    <div class="card">
+      <h4>📊 Metrics</h4>
+      <div class="mgrid">
+        <div class="mbox"><div class="mval c-or" id="mCTR">—</div><div class="mlbl">CTR Score</div></div>
+        <div class="mbox"><div class="mval c-rd" id="mViral">—</div><div class="mlbl">Viral Potential</div></div>
+        <div class="mbox"><div class="mval c-gr" id="mSEO">—</div><div class="mlbl">SEO Score</div></div>
+        <div class="mbox"><div class="mval c-bl" id="mTrend">—</div><div class="mlbl">Trend Score</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h4>🔥 Trending Keywords</h4>
+      <div class="tags" id="rTags"><div class="pill" style="width:100%;margin:0">Run analysis to see tags</div></div>
+    </div>
+    <div class="card">
+      <h4>💡 Title Ideas — click to select</h4>
+      <div id="rTitles"><div class="pill">Run analysis to get title ideas</div></div>
+    </div>
+    <div class="card">
+      <h4>🎨 Thumbnail Brief</h4>
+      <div class="outbox" id="rBrief">Run analysis to get brief</div>
+    </div>
+    <div class="card">
+      <h4>📈 SEO Breakdown</h4>
+      <div id="rSEO"><div class="pill">Run analysis to see SEO data</div></div>
+    </div>
+    <div class="card">
+      <h4>🏆 What's Working Right Now</h4>
+      <div class="outbox" id="rWorking">Run analysis to see current trends</div>
+    </div>
+  </div>
+</div>
+<div id="resStatus">Ready — enter your API key above, fill in video info, then click Analyze &amp; Research</div>
+</div>
+
+<!-- STUDIO TAB -->
+<div class="view" id="view-studio">
+<div class="s-wrap">
+  <div class="s-left">
+    <!-- hidden file inputs -->
+    <input type="file" id="bgIn" accept="image/*" style="display:none" onchange="onBGFile(event)">
+    <input type="file" id="faceIn" accept="image/*" style="display:none" onchange="onFaceFile(event)">
+
+    <div class="blk">
+      <h3><span class="dot"></span>Background Screenshot</h3>
+      <div class="upz" id="bgZone"
+        onclick="document.getElementById('bgIn').click()"
+        ondragover="event.preventDefault();this.classList.add('over')"
+        ondragleave="this.classList.remove('over')"
+        ondrop="dropImg(event,'bg')">
+        <div class="ic">🖼</div>
+        <p id="bgP">Click or drag game screenshot</p>
+        <span class="ubtn">Choose File</span>
+      </div>
+    </div>
+
+    <div class="blk">
+      <h3><span class="dot" style="background:var(--orange)"></span>Your Photo</h3>
+      <div class="upz" id="faceZone"
+        onclick="document.getElementById('faceIn').click()"
+        ondragover="event.preventDefault();this.classList.add('over')"
+        ondragleave="this.classList.remove('over')"
+        ondrop="dropImg(event,'face')">
+        <div class="ic">🧑</div>
+        <p id="faceP">Click or drag your solo photo<br><span style="font-size:10px">AI removes background</span></p>
+        <span class="ubtn">Choose File</span>
+      </div>
+      <button class="btn-gh" style="width:100%;margin-top:6px;font-size:11px" onclick="removeBG()">✂ Remove Background (AI)</button>
+      <div style="margin-top:8px">
+        <div class="fr"><label class="lbl">Size <span class="v" id="vFS">50%</span></label>
+          <input type="range" id="sFS" min="10" max="100" value="50" oninput="document.getElementById('vFS').textContent=this.value+'%';render()"></div>
+        <div class="fr"><label class="lbl">X Pos <span class="v" id="vFX">3%</span></label>
+          <input type="range" id="sFX" min="0" max="85" value="3" oninput="document.getElementById('vFX').textContent=this.value+'%';render()"></div>
+        <div class="fr"><label class="lbl">Y Pos <span class="v" id="vFY">5%</span></label>
+          <input type="range" id="sFY" min="0" max="85" value="5" oninput="document.getElementById('vFY').textContent=this.value+'%';render()"></div>
+      </div>
+    </div>
+
+    <div class="blk">
+      <h3><span class="dot" style="background:var(--green)"></span>Text Layers</h3>
+      <div style="display:flex;gap:5px;margin-bottom:7px">
+        <input type="text" id="newTxt" placeholder="Type text...">
+        <button class="btn-r" onclick="addLayer()">+</button>
+      </div>
+      <div id="layerList"></div>
+    </div>
+
+    <div class="blk">
+      <h3><span class="dot" style="background:var(--blue)"></span>Presets</h3>
+      <div class="pgrid">
+        <div class="ptile" onclick="applyPreset('baseraid')">Base Raid</div>
+        <div class="ptile" onclick="applyPreset('thefront')">The Front</div>
+        <div class="ptile" onclick="applyPreset('pvp')">PVP Wipe</div>
+        <div class="ptile" onclick="applyPreset('solo')">Solo Raid</div>
+        <div class="ptile" onclick="applyPreset('loot')">Loot Haul</div>
+        <div class="ptile" onclick="applyPreset('wipe')">Wipe Day</div>
+      </div>
+    </div>
+
+    <div class="blk">
+      <h3><span class="dot" style="background:#888"></span>Edit Layer</h3>
+      <div id="editPanel"><div class="pill">Select a text layer above</div></div>
+    </div>
+  </div>
+
+  <!-- CANVAS AREA -->
+  <div class="s-canvas">
+    <canvas id="cv" width="1280" height="720"></canvas>
+    <div class="ai-bar">
+      <textarea id="aiTxt" rows="2" placeholder="AI prompt: e.g. 'BASE RAIDING NIGHT — huge yellow text right side, red glow, dark gritty The Front style'"></textarea>
+      <div class="ai-row">
+        <button class="btn-o" style="flex:1" onclick="runStudioAI()">⚡ Apply AI Prompt</button>
+        <button class="btn-r" onclick="autoGenerate()">🎯 Auto Generate</button>
+        <button class="btn-gh" onclick="resetStudio()">Reset</button>
+      </div>
+      <div id="stStatus"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="s-right">
+    <div class="blk">
+      <h3><span class="dot"></span>Effects</h3>
+      <div class="tr"><span class="tl">Vignette</span><label class="tog"><input type="checkbox" id="fxV" checked onchange="render()"><span class="togs"></span></label></div>
+      <div class="tr"><span class="tl">Text Glow</span><label class="tog"><input type="checkbox" id="fxG" checked onchange="render()"><span class="togs"></span></label></div>
+      <div class="tr"><span class="tl">Text Outline</span><label class="tog"><input type="checkbox" id="fxO" checked onchange="render()"><span class="togs"></span></label></div>
+      <div class="tr"><span class="tl">Drop Shadow</span><label class="tog"><input type="checkbox" id="fxS" checked onchange="render()"><span class="togs"></span></label></div>
+      <div class="tr"><span class="tl">Face Glow</span><label class="tog"><input type="checkbox" id="fxFG" checked onchange="render()"><span class="togs"></span></label></div>
+      <div class="tr"><span class="tl">Color Grade</span><label class="tog"><input type="checkbox" id="fxCG" checked onchange="render()"><span class="togs"></span></label></div>
+      <div class="dv"></div>
+      <div class="fr"><label class="lbl">Brightness <span class="v" id="vBr">100%</span></label>
+        <input type="range" id="sBr" min="30" max="160" value="100" oninput="document.getElementById('vBr').textContent=this.value+'%';render()"></div>
+      <div class="fr"><label class="lbl">Contrast <span class="v" id="vCo">115%</span></label>
+        <input type="range" id="sCo" min="50" max="220" value="115" oninput="document.getElementById('vCo').textContent=this.value+'%';render()"></div>
+      <div class="fr"><label class="lbl">Saturation <span class="v" id="vSa">115%</span></label>
+        <input type="range" id="sSa" min="0" max="220" value="115" oninput="document.getElementById('vSa').textContent=this.value+'%';render()"></div>
+      <div class="fr"><label class="lbl">Vignette <span class="v" id="vVi">70%</span></label>
+        <input type="range" id="sVi" min="0" max="100" value="70" oninput="document.getElementById('vVi').textContent=this.value+'%';render()"></div>
+    </div>
+    <div class="blk">
+      <h3><span class="dot" style="background:var(--orange)"></span>SEO Data</h3>
+      <div id="stSEO" class="pill">Run Research tab first</div>
+    </div>
+    <div class="blk">
+      <h3><span class="dot" style="background:#888"></span>Export</h3>
+      <button class="btn-gh" style="width:100%;margin-bottom:5px" onclick="exportPNG()">⬇ PNG 1280×720</button>
+      <button class="btn-gh" style="width:100%" onclick="copyClip()">📋 Copy to Clipboard</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// ═══ STATE ═══
+const cv = document.getElementById('cv');
+const cx = cv.getContext('2d');
+let bgImg=null, faceImg=null, faceRM=null;
+let layers=[], selIdx=null, drag=null, dragOX=0, dragOY=0;
+let dScale=1, rData=null, selTitleIdx=null;
+
+// ═══ API KEY ═══
+function getKey() {
+  return document.getElementById('apiKey').value.trim();
+}
+function saveKey() {
+  try { localStorage.setItem('doncubano_apikey', getKey()); } catch(e){}
+}
+// Load saved key on start
+try {
+  const saved = localStorage.getItem('doncubano_apikey');
+  if (saved) document.getElementById('apiKey').value = saved;
+} catch(e){}
+
+async function testKey() {
+  const key = getKey();
+  if (!key) { setApiStatus('❌ Enter your API key first', 'var(--red)'); return; }
+  setApiStatus('⏳ Testing...', 'var(--orange)');
+  try {
+    const r = await apiCall('Say OK', 'Say the word OK and nothing else', 50);
+    if (r.toLowerCase().includes('ok')) {
+      setApiStatus('✅ Connected! API key works.', 'var(--green)');
+    } else {
+      setApiStatus('✅ Connected! Response: ' + r.substring(0,30), 'var(--green)');
+    }
+  } catch(e) {
+    setApiStatus('❌ ' + e.message.substring(0,80), 'var(--red)');
+  }
+}
+function setApiStatus(msg, color) {
+  const el = document.getElementById('apiStatus');
+  el.textContent = msg; el.style.color = color||'var(--muted)';
+}
+
+// ═══ API CALL ═══
+async function apiCall(system, user, maxTokens) {
+  const key = getKey();
+  if (!key) throw new Error('No API key — enter it in the bar at the top');
+  maxTokens = maxTokens || 1500;
+
+  const body = { model: 'claude-sonnet-4-6', max_tokens: maxTokens, messages: [{ role: 'user', content: user }] };
+  if (system) body.system = system;
+
+  // Use a CORS proxy to bypass browser restrictions
+  const PROXY = 'https://corsproxy.io/?';
+  const API_URL = PROXY + encodeURIComponent('https://api.anthropic.com/v1/messages');
+
+  let res, data;
+  try {
+    res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify(body)
+    });
+  } catch(fe) {
+    throw new Error('Network error: ' + fe.message + ' — check your internet connection');
+  }
+
+  try { data = await res.json(); }
+  catch(e) { throw new Error('Bad API response (HTTP ' + res.status + ')'); }
+
+  if (!res.ok || data.error) {
+    const msg = data.error ? (data.error.message||JSON.stringify(data.error)) : ('HTTP '+res.status);
+    throw new Error(msg);
+  }
+  return data.content.map(c => c.text||'').join('');
+}
+
+function parseJSON(raw) {
+  let s = raw.replace(/```json/gi,'').replace(/```/g,'').trim();
+  const a = s.indexOf('['), o = s.indexOf('{');
+  if (a !== -1 && (o === -1 || a < o)) {
+    s = s.substring(a, s.lastIndexOf(']')+1);
+  } else if (o !== -1) {
+    s = s.substring(o, s.lastIndexOf('}')+1);
+  }
+  return JSON.parse(s);
+}
+
+// ═══ TABS ═══
+function showTab(name) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.getElementById('view-'+name).classList.add('on');
+  document.getElementById('tabR').classList.toggle('on', name==='research');
+  document.getElementById('tabS').classList.toggle('on', name==='studio');
+  if (name==='studio') { setTimeout(()=>{resizeCv();render();},10); }
+}
+
+// ═══ RESEARCH ═══
+function setSt(msg, color) {
+  const el = document.getElementById('resStatus');
+  el.textContent = msg; el.style.color = color||'var(--muted)';
+}
+
+async function runResearch() {
+  if (!getKey()) { setSt('❌ Enter your API key at the top first!', 'var(--red)'); return; }
+  const game = document.getElementById('gGame').value;
+  const type = document.getElementById('gType').value;
+  const extra = document.getElementById('gCtx').value.trim();
+
+  setSt('⏳ Running AI research (10-15 seconds)...', 'var(--orange)');
+  ['mCTR','mViral','mSEO','mTrend'].forEach(id=>{ document.getElementById(id).textContent='...'; });
+  document.getElementById('rTags').innerHTML='<div class="pill" style="width:100%">Analyzing...</div>';
+  document.getElementById('rTitles').innerHTML='<div class="pill">Generating titles...</div>';
+  document.getElementById('rBrief').textContent='Generating brief...';
+  document.getElementById('rWorking').textContent='Analyzing trends...';
+  document.getElementById('rSEO').innerHTML='<div class="pill">Running SEO analysis...</div>';
+
+  const sys = `You are a YouTube viral growth expert for survival/FPS gaming. You know what goes viral for The Front, Rust, EFT, Hunt: Showdown. Channel: @DoncubanoYTV (life coach + dad gamer, calm older-brother style, audience 18-35 male gamers). Return ONLY valid JSON, no other text, no markdown.`;
+
+  const msg = `Game: ${game}, Type: ${type}, Extra: ${extra||'none'}
+
+Return this JSON (use real numbers not placeholders):
+{"ctrScore":78,"viralScore":72,"seoScore":81,"trendScore":69,"trendingTags":["the front base raid","pvp highlights","survival game","rust like game","base building","solo raid","wipe day","the front gameplay","base raiding night","the front tips"],"hotIdx":[0,1,2],"titleIdeas":[{"t":"TITLE HERE","s":88,"r":"reason"},{"t":"TITLE2","s":85,"r":"reason"},{"t":"TITLE3","s":82,"r":"reason"},{"t":"TITLE4","s":79,"r":"reason"},{"t":"TITLE5","s":76,"r":"reason"}],"brief":"describe ideal thumbnail in 2-3 sentences","seoKeyword":"main keyword","seoTags":["tag1","tag2","tag3","tag4","tag5","tag6","tag7","tag8","tag9","tag10"],"seoDesc":"first 2 sentences of video description","seoTips":["tip1","tip2","tip3"],"whatsWorking":"2 paragraphs on what thumbnail styles are getting highest CTR in survival game YouTube right now","textLine1":"INSANE","textLine2":"BASE RAID","color1":"#FFFFFF","color2":"#FFE000","glowColor":"#FF2200","facePos":"left","mood":"dark"}`;
+
+  try {
+    const raw = await apiCall(sys, msg, 1500);
+    let d;
+    try { d = parseJSON(raw); }
+    catch(pe) {
+      setSt('❌ Parse error. Response was: ' + raw.substring(0,150), 'var(--red)');
+      console.error('Raw response:', raw);
+      return;
+    }
+    rData = d;
+    renderResearch(d);
+    setSt('✅ Done! Click a title to select it, then click "Send to Studio & Auto Generate"', 'var(--green)');
+  } catch(e) {
+    setSt('❌ ' + e.message, 'var(--red)');
+    console.error(e);
+  }
+}
+
+function renderResearch(d) {
+  document.getElementById('mCTR').textContent   = d.ctrScore||'?';
+  document.getElementById('mViral').textContent = d.viralScore||'?';
+  document.getElementById('mSEO').textContent   = d.seoScore||'?';
+  document.getElementById('mTrend').textContent = d.trendScore||'?';
+
+  const hot = new Set(d.hotIdx||[]);
+  document.getElementById('rTags').innerHTML = (d.trendingTags||[]).map((t,i)=>
+    `<span class="tag ${hot.has(i)?'hot':''}">${t}</span>`).join('');
+
+  document.getElementById('rTitles').innerHTML = (d.titleIdeas||[]).map((t,i)=>{
+    const sc = (t.s||0)>=80?'sc-hi':(t.s||0)>=65?'sc-md':'sc-lo';
+    return `<div class="idea" id="idea${i}" onclick="pickTitle(${i})">
+      <div class="idea-t">${t.t||''}</div>
+      <div class="idea-m"><span class="${sc}">CTR: ${t.s||0}/100</span> &nbsp; ${t.r||''}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('rBrief').textContent = d.brief||'';
+  document.getElementById('rWorking').textContent = d.whatsWorking||'';
+
+  document.getElementById('rSEO').innerHTML = `
+    <div style="margin-bottom:7px"><div class="lbl" style="margin-bottom:3px">Primary Keyword</div><span class="tag hot">${d.seoKeyword||''}</span></div>
+    <div style="margin-bottom:7px"><div class="lbl" style="margin-bottom:3px">Tags</div><div class="tags">${(d.seoTags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div></div>
+    <div style="margin-bottom:7px"><div class="lbl" style="margin-bottom:3px">Description Opener</div><div class="outbox" style="padding:8px;font-size:11px">${d.seoDesc||''}</div></div>
+    <div><div class="lbl" style="margin-bottom:3px">Tips</div>${(d.seoTips||[]).map(t=>`<div style="background:var(--panel3);border-radius:3px;padding:6px;margin-bottom:4px;font-size:11px;color:var(--muted2);line-height:1.5">• ${t}</div>`).join('')}</div>`;
+
+  document.getElementById('stSEO').innerHTML =
+    `<strong style="color:var(--orange)">${d.seoKeyword||''}</strong><br>${(d.seoTags||[]).slice(0,5).join(' · ')}`;
+}
+
+function pickTitle(i) {
+  document.querySelectorAll('.idea').forEach(el=>el.classList.remove('sel'));
+  document.getElementById('idea'+i).classList.add('sel');
+  selTitleIdx = i;
+  const t = rData.titleIdeas[i].t;
+  document.getElementById('selTitleBox').innerHTML = `<strong style="color:var(--orange)">${t}</strong>`;
+}
+
+function sendToStudio() {
+  showTab('studio');
+  if (rData) setTimeout(autoGenerate, 100);
+}
+
+// ═══ AUTO GENERATE ═══
+async function autoGenerate() {
+  if (!getKey()) { stSet('❌ Enter your API key at the top first!','var(--red)'); return; }
+  if (!rData) {
+    showTab('research');
+    setSt('⚠ Run Research first, then Auto Generate','var(--orange)');
+    return;
+  }
+  showTab('studio');
+  setTimeout(async ()=>{
+    resizeCv(); render();
+    stSet('⚡ Auto-generating thumbnail layout...','var(--orange)');
+    const d = rData;
+    const title = selTitleIdx!==null ? d.titleIdeas[selTitleIdx].t : d.titleIdeas[0].t;
+
+    const sys = `You design YouTube gaming thumbnail text layouts. @DoncubanoYTV plays The Front (like Rust) — dark gritty style. Canvas 1280x720. Return ONLY a JSON array, no other text.`;
+    const msg = `Title: "${title}". Brief: ${d.brief}. Text: ["${d.textLine1||'INSANE'}","${d.textLine2||'BASE RAID'}"]. Colors: line1=${d.color1||'#FFFFFF'} line2=${d.color2||'#FFE000'} glow=${d.glowColor||'#FF2200'}. Face on ${d.facePos||'left'} side.
+
+Return JSON array of 2-3 layer objects. Each must have: text(string), x(number, opposite side from face so if face=left put x=700-950), y(number, first line y=330 second y=560), fontSize(number 140-200 for main 80-110 for sub), color(hex), strokeColor("#000000"), strokeWidth(10), glowColor(hex), skewX(-6), align("center"), uppercase(true). JSON array only.`;
+
+    try {
+      const raw = await apiCall(sys, msg, 800);
+      const parsed = parseJSON(raw);
+      layers = parsed.map(l=>Object.assign(mkL(),l));
+      selIdx=0;
+      stSet(`✅ Generated from research! Title: "${title}"`, 'var(--green)');
+      renderLL(); renderEP(); render();
+    } catch(e) {
+      stSet('❌ Auto generate: '+e.message,'var(--red)');
+    }
+  }, 50);
+}
+
+// ═══ CANVAS ═══
+function resizeCv() {
+  const area = cv.parentElement;
+  const maxW = area.clientWidth - 20;
+  const maxH = area.clientHeight - 115;
+  const s = Math.min(maxW/1280, maxH/720, 1);
+  dScale = s;
+  cv.style.width  = Math.round(1280*s)+'px';
+  cv.style.height = Math.round(720*s)+'px';
+}
+window.addEventListener('resize', ()=>{ resizeCv(); render(); });
+
+function render() {
+  const W=1280, H=720;
+  cx.clearRect(0,0,W,H);
+  cx.fillStyle='#05050A'; cx.fillRect(0,0,W,H);
+
+  if (bgImg) {
+    const br=+document.getElementById('sBr').value/100;
+    const co=+document.getElementById('sCo').value/100;
+    const sa=+document.getElementById('sSa').value/100;
+    cx.save();
+    cx.filter=`brightness(${br}) contrast(${co}) saturate(${sa})`;
+    const s=Math.max(W/bgImg.naturalWidth,H/bgImg.naturalHeight);
+    cx.drawImage(bgImg,(W-bgImg.naturalWidth*s)/2,(H-bgImg.naturalHeight*s)/2,bgImg.naturalWidth*s,bgImg.naturalHeight*s);
+    cx.filter='none';
+    if (document.getElementById('fxCG').checked){cx.fillStyle='rgba(5,3,0,0.18)';cx.fillRect(0,0,W,H);}
+    cx.restore();
+  }
+
+  if (document.getElementById('fxV').checked) {
+    const v=+document.getElementById('sVi').value/100;
+    const g=cx.createRadialGradient(W/2,H/2,H*0.2,W/2,H/2,H*0.9);
+    g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,`rgba(0,0,0,${v})`);
+    cx.fillStyle=g; cx.fillRect(0,0,W,H);
+    const gl=cx.createLinearGradient(0,0,W,0);
+    gl.addColorStop(0,`rgba(0,0,0,${v*0.5})`);
+    gl.addColorStop(0.3,'rgba(0,0,0,0)');
+    gl.addColorStop(0.7,'rgba(0,0,0,0)');
+    gl.addColorStop(1,`rgba(0,0,0,${v*0.5})`);
+    cx.fillStyle=gl; cx.fillRect(0,0,W,H);
+  }
+
+  const fi = faceRM||faceImg;
+  if (fi) {
+    const sp=+document.getElementById('sFS').value/100;
+    const xp=+document.getElementById('sFX').value/100;
+    const yp=+document.getElementById('sFY').value/100;
+    const fh=H*sp, fw=fi.naturalWidth*(fh/fi.naturalHeight);
+    cx.save();
+    if (document.getElementById('fxFG').checked){cx.shadowColor='#FF6600';cx.shadowBlur=35;}
+    cx.drawImage(fi,W*xp,H*yp,fw,fh);
+    cx.restore();
+  }
+
+  layers.forEach(l=>{
+    cx.save();
+    const txt=l.uppercase?l.text.toUpperCase():l.text;
+    cx.font=`900 ${l.fontSize}px "${l.fontFamily}",Impact,"Arial Black",sans-serif`;
+    cx.textAlign=l.align; cx.textBaseline='alphabetic';
+    const rad=l.skewX*Math.PI/180;
+    cx.transform(1,0,-Math.tan(rad),1,l.x+l.y*Math.tan(rad),0);
+    if (document.getElementById('fxS').checked){
+      cx.shadowOffsetX=3;cx.shadowOffsetY=6;cx.shadowBlur=8;cx.shadowColor='rgba(0,0,0,0.95)';
+    }
+    if (document.getElementById('fxG').checked){
+      cx.shadowColor=l.glowColor;cx.shadowBlur=30;cx.shadowOffsetX=0;cx.shadowOffsetY=0;
+    }
+    if (document.getElementById('fxO').checked&&l.strokeWidth>0){
+      cx.strokeStyle=l.strokeColor;cx.lineWidth=l.strokeWidth;cx.lineJoin='round';
+      cx.strokeText(txt,0,l.y);
+    }
+    cx.fillStyle=l.color; cx.fillText(txt,0,l.y);
+    cx.restore();
+  });
+}
+
+// ═══ IMAGE LOADING ═══
+function imgFromFile(f, type) {
+  if (!f||!f.type.startsWith('image/')) { alert('Please use an image file (PNG, JPG, etc)'); return; }
+  const img=new Image();
+  img.onload=()=>{
+    if(type==='bg'){
+      bgImg=img;
+      document.getElementById('bgZone').classList.add('ok');
+      document.getElementById('bgP').textContent='✓ '+f.name;
+    } else {
+      faceImg=img; faceRM=null;
+      document.getElementById('faceZone').classList.add('ok');
+      document.getElementById('faceP').innerHTML='✓ '+f.name+'<br><span style="font-size:10px;color:var(--orange)">Click Remove Background</span>';
+    }
+    render();
+  };
+  img.onerror=()=>alert('Could not load image');
+  img.src=URL.createObjectURL(f);
+}
+function onBGFile(e){ imgFromFile(e.target.files[0],'bg'); }
+function onFaceFile(e){ imgFromFile(e.target.files[0],'face'); }
+function dropImg(e,type){ e.preventDefault(); e.currentTarget.classList.remove('over'); imgFromFile(e.dataTransfer.files[0],type); }
+
+// ═══ BACKGROUND REMOVAL ═══
+async function removeBG() {
+  if (!faceImg) { alert('Upload a photo first'); return; }
+  if (!getKey()) { stSet('❌ Enter your API key at the top','var(--red)'); return; }
+  stSet('⏳ AI removing background (may take 15s)...','var(--orange)');
+
+  // First try: ask Claude for bounding box
+  const tmp=document.createElement('canvas');
+  // Downscale for API efficiency
+  const maxDim = 800;
+  const scale = Math.min(maxDim/faceImg.naturalWidth, maxDim/faceImg.naturalHeight, 1);
+  tmp.width=Math.round(faceImg.naturalWidth*scale);
+  tmp.height=Math.round(faceImg.naturalHeight*scale);
+  const tc=tmp.getContext('2d');
+  tc.drawImage(faceImg,0,0,tmp.width,tmp.height);
+  const b64=tmp.toDataURL('image/jpeg',0.8).split(',')[1];
+
+  try {
+    const PROXY2 = 'https://corsproxy.io/?' + encodeURIComponent('https://api.anthropic.com/v1/messages');
+    const raw = await fetch(PROXY2,{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': getKey(),
+        'anthropic-version':'2023-06-01'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:200,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},
+          {type:'text',text:'Find the main adult person in this photo. Return ONLY this JSON with no other text: {"left":N,"top":N,"width":N,"height":N,"bgR":N,"bgG":N,"bgB":N} where left/top/width/height are percentages of image size, and bgR/G/B are the dominant background color 0-255.'}
+        ]}]
+      })
+    });
+    const rdata = await raw.json();
+    if (!raw.ok||rdata.error) throw new Error(rdata.error?.message||'API error');
+    const txt = rdata.content.map(c=>c.text||'').join('');
+    const p = parseJSON(txt);
+
+    // Crop to person
+    const c2=document.createElement('canvas');
+    const sw=Math.round(faceImg.naturalWidth*p.width/100);
+    const sh=Math.round(faceImg.naturalHeight*p.height/100);
+    const sx=Math.round(faceImg.naturalWidth*p.left/100);
+    const sy=Math.round(faceImg.naturalHeight*p.top/100);
+    c2.width=sw; c2.height=sh;
+    const cx2=c2.getContext('2d');
+    cx2.drawImage(faceImg,sx,sy,sw,sh,0,0,sw,sh);
+
+    // Chroma key: remove pixels close to detected bg color
+    const id=cx2.getImageData(0,0,sw,sh);
+    const d=id.data;
+    const bgR=+p.bgR||180, bgG=+p.bgG||180, bgB=+p.bgB||180;
+    const threshold = 70;
+    for(let i=0;i<d.length;i+=4){
+      const dist=Math.sqrt((d[i]-bgR)**2+(d[i+1]-bgG)**2+(d[i+2]-bgB)**2);
+      if(dist<threshold){
+        d[i+3]=Math.max(0,d[i+3]-Math.round((threshold-dist)*3.6));
+      }
+    }
+    cx2.putImageData(id,0,0);
+
+    faceRM=new Image();
+    faceRM.onload=()=>{ stSet('✅ Background removed!','var(--green)'); render(); };
+    faceRM.src=c2.toDataURL();
+
+  } catch(e) {
+    // Fallback: just use the image as-is with a note
+    stSet('⚠ BG removal needs better photo (solid background works best). Error: '+e.message.substring(0,60),'var(--orange)');
+    console.error('BG removal error:',e);
+  }
+}
+
+// ═══ TEXT LAYERS ═══
+function mkL(){
+  return {text:'YOUR TEXT',x:800,y:380,fontSize:160,fontFamily:'Impact',
+    color:'#FFFFFF',strokeColor:'#000000',strokeWidth:10,
+    glowColor:'#FF2200',skewX:-5,align:'center',uppercase:true};
+}
+function addLayer(txt,cfg){
+  const l=Object.assign(mkL(),cfg||{});
+  if(txt) l.text=txt;
+  else { const v=document.getElementById('newTxt').value.trim(); if(v) l.text=v; }
+  l.y=300+layers.length*200;
+  document.getElementById('newTxt').value='';
+  layers.push(l); selIdx=layers.length-1;
+  renderLL(); renderEP(); render();
+}
+function pickL(i){ selIdx=i; renderLL(); renderEP(); }
+function delL(i){
+  layers.splice(i,1);
+  if(selIdx>=layers.length) selIdx=Math.max(0,layers.length-1);
+  if(!layers.length) selIdx=null;
+  renderLL(); renderEP(); render();
+}
+function renderLL(){
+  const el=document.getElementById('layerList');
+  if(!layers.length){el.innerHTML='<div class="pill" style="font-size:11px">No layers yet</div>';return;}
+  el.innerHTML=layers.map((l,i)=>`
+    <div class="lrow ${selIdx===i?'on':''}" onclick="pickL(${i})">
+      <div class="ldot" style="background:${l.color}"></div>
+      <div class="ltxt">${l.text}</div>
+      <div class="ldel" onclick="event.stopPropagation();delL(${i})">×</div>
+    </div>`).join('');
+}
+function renderEP(){
+  const el=document.getElementById('editPanel');
+  if(selIdx===null||selIdx>=layers.length){el.innerHTML='<div class="pill">Select a layer above</div>';return;}
+  const l=layers[selIdx];
+  el.innerHTML=`
+    <div class="fr"><label class="lbl">Text</label><input type="text" value="${l.text.replace(/"/g,'&quot;')}" oninput="upL('text',this.value)"></div>
+    <div class="fr"><label class="lbl">Font Size <span class="v">${l.fontSize}px</span></label>
+      <input type="range" min="20" max="300" value="${l.fontSize}" oninput="upL('fontSize',+this.value);this.previousElementSibling.querySelector('.v').textContent=this.value+'px'"></div>
+    <div class="fr"><label class="lbl">Font</label><select onchange="upL('fontFamily',this.value)">
+      <option ${l.fontFamily==='Impact'?'selected':''}>Impact</option>
+      <option ${l.fontFamily==='Arial Black'?'selected':''}>Arial Black</option>
+      <option ${l.fontFamily==='Georgia'?'selected':''}>Georgia</option>
+    </select></div>
+    <div class="fr"><label class="lbl">Fill Color</label><input type="color" value="${l.color}" oninput="upL('color',this.value)"></div>
+    <div class="fr"><label class="lbl">Glow Color</label><input type="color" value="${l.glowColor}" oninput="upL('glowColor',this.value)"></div>
+    <div class="fr"><label class="lbl">Outline Color</label><input type="color" value="${l.strokeColor}" oninput="upL('strokeColor',this.value)"></div>
+    <div class="fr"><label class="lbl">Outline Width <span class="v">${l.strokeWidth}px</span></label>
+      <input type="range" min="0" max="30" value="${l.strokeWidth}" oninput="upL('strokeWidth',+this.value);this.previousElementSibling.querySelector('.v').textContent=this.value+'px'"></div>
+    <div class="fr"><label class="lbl">Skew <span class="v">${l.skewX}°</span></label>
+      <input type="range" min="-20" max="20" value="${l.skewX}" oninput="upL('skewX',+this.value);this.previousElementSibling.querySelector('.v').textContent=this.value+'°'"></div>
+    <div class="fr"><label class="lbl">X Position <span class="v">${Math.round(l.x)}</span></label>
+      <input type="range" min="0" max="1280" value="${l.x}" oninput="upL('x',+this.value);this.previousElementSibling.querySelector('.v').textContent=Math.round(this.value)"></div>
+    <div class="fr"><label class="lbl">Y Position <span class="v">${Math.round(l.y)}</span></label>
+      <input type="range" min="50" max="720" value="${l.y}" oninput="upL('y',+this.value);this.previousElementSibling.querySelector('.v').textContent=Math.round(this.value)"></div>
+    <div class="fr"><label class="lbl">Align</label><select onchange="upL('align',this.value)">
+      <option ${l.align==='left'?'selected':''} value="left">Left</option>
+      <option ${l.align==='center'?'selected':''} value="center">Center</option>
+      <option ${l.align==='right'?'selected':''} value="right">Right</option>
+    </select></div>
+    <div class="tr"><span class="tl">Uppercase</span><label class="tog"><input type="checkbox" ${l.uppercase?'checked':''} onchange="upL('uppercase',this.checked)"><span class="togs"></span></label></div>`;
+}
+function upL(k,v){
+  if(selIdx===null||selIdx>=layers.length)return;
+  layers[selIdx][k]=v; renderLL(); render();
+}
+
+// ═══ PRESETS ═══
+function applyPreset(name){
+  const P={
+    baseraid:[
+      {text:'INSANE',x:920,y:330,fontSize:195,color:'#FFFFFF',glowColor:'#FF1100',skewX:-5},
+      {text:'BASE RAID!',x:920,y:560,fontSize:155,color:'#FFE000',glowColor:'#FF8800',skewX:-5}
+    ],
+    thefront:[
+      {text:'THE FRONT',x:920,y:165,fontSize:75,color:'#AAAAAA',glowColor:'#444444',skewX:0},
+      {text:'BASE',x:920,y:370,fontSize:230,color:'#FFFFFF',glowColor:'#FF1100',skewX:-5},
+      {text:'RAIDING',x:920,y:565,fontSize:165,color:'#FFE000',glowColor:'#FF8800',skewX:-5},
+      {text:'NIGHT',x:920,y:705,fontSize:190,color:'#8888CC',glowColor:'#2233AA',skewX:-5}
+    ],
+    pvp:[
+      {text:'THEY TRIED IT',x:920,y:305,fontSize:125,color:'#FFFFFF',glowColor:'#FF1100',skewX:-5},
+      {text:'BIG MISTAKE',x:920,y:530,fontSize:165,color:'#FF2200',glowColor:'#CC0000',skewX:-5}
+    ],
+    solo:[
+      {text:'SOLO',x:920,y:335,fontSize:240,color:'#FFFFFF',glowColor:'#FF1100',skewX:-5},
+      {text:'RAID',x:920,y:590,fontSize:215,color:'#FFE000',glowColor:'#FF8800',skewX:-5}
+    ],
+    loot:[
+      {text:'WE GOT',x:920,y:285,fontSize:130,color:'#FFFFFF',glowColor:'#00CC55',skewX:-4},
+      {text:'ALL THE LOOT',x:920,y:480,fontSize:120,color:'#00FF88',glowColor:'#00AA44',skewX:-4},
+      {text:'$$$',x:920,y:660,fontSize:185,color:'#FFD700',glowColor:'#CC9900',skewX:-5}
+    ],
+    wipe:[
+      {text:'WIPE DAY',x:920,y:325,fontSize:190,color:'#FFFFFF',glowColor:'#FF1100',skewX:-5},
+      {text:'NOBODY SURVIVED',x:920,y:535,fontSize:105,color:'#FF2200',glowColor:'#AA0000',skewX:-5}
+    ]
+  };
+  layers=(P[name]||[]).map(cfg=>Object.assign(mkL(),cfg));
+  selIdx=0; renderLL(); renderEP(); render();
+}
+
+// ═══ AI STUDIO PROMPT ═══
+async function runStudioAI(){
+  if(!getKey()){stSet('❌ Enter API key at top','var(--red)');return;}
+  const p=document.getElementById('aiTxt').value.trim();
+  if(!p)return;
+  stSet('⏳ AI processing...','var(--orange)');
+  const sys=`Edit YouTube thumbnail text layers for @DoncubanoYTV — The Front game (like Rust) — dark gritty style. Canvas 1280x720. Return ONLY a JSON array. No markdown.`;
+  try {
+    const raw=await apiCall(sys,`Current: ${JSON.stringify(layers)}\n\nInstruction: ${p}\n\nReturn updated JSON array of layer objects only. Each needs: text,x,y,fontSize,color,strokeColor,strokeWidth,glowColor,skewX,align,uppercase,fontFamily`,800);
+    layers=parseJSON(raw).map(l=>Object.assign(mkL(),l));
+    selIdx=0; stSet('✅ Done!','var(--green)');
+    renderLL(); renderEP(); render();
+  }catch(e){stSet('❌ '+e.message,'var(--red)');}
+}
+
+// ═══ DRAG TEXT ═══
+function cvXY(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)/dScale,y:(e.clientY-r.top)/dScale};}
+cv.addEventListener('mousedown',e=>{
+  const{x,y}=cvXY(e);
+  for(let i=layers.length-1;i>=0;i--){
+    const l=layers[i];
+    cx.font=`900 ${l.fontSize}px ${l.fontFamily}`;
+    const w=cx.measureText(l.uppercase?l.text.toUpperCase():l.text).width;
+    let lx=l.x; if(l.align==='center')lx-=w/2; if(l.align==='right')lx-=w;
+    if(x>=lx-10&&x<=lx+w+10&&y>=l.y-l.fontSize&&y<=l.y+15){
+      drag=i;dragOX=x-l.x;dragOY=y-l.y;pickL(i);return;
+    }
+  }
+  drag=null;
+});
+cv.addEventListener('mousemove',e=>{if(drag===null)return;const{x,y}=cvXY(e);layers[drag].x=x-dragOX;layers[drag].y=y-dragOY;render();});
+cv.addEventListener('mouseup',()=>{drag=null;});
+
+// ═══ EXPORT ═══
+function exportPNG(){
+  render();
+  const a=document.createElement('a');
+  a.download='DoncubanoYTV_thumbnail.png';
+  a.href=cv.toDataURL('image/png',1.0);
+  a.click();
+}
+async function copyClip(){
+  render();
+  cv.toBlob(async b=>{
+    try{await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);stSet('✅ Copied!','var(--green)');}
+    catch(e){alert('Copy failed: '+e.message);}
+  });
+}
+function resetStudio(){
+  bgImg=null;faceImg=null;faceRM=null;layers=[];selIdx=null;
+  document.getElementById('bgZone').classList.remove('ok');
+  document.getElementById('faceZone').classList.remove('ok');
+  document.getElementById('bgP').textContent='Click or drag game screenshot';
+  document.getElementById('faceP').innerHTML='Click or drag your solo photo<br><span style="font-size:10px">AI removes background</span>';
+  document.getElementById('bgIn').value='';
+  document.getElementById('faceIn').value='';
+  renderLL();renderEP();render();
+}
+function stSet(msg,color){const el=document.getElementById('stStatus');el.textContent=msg;el.style.color=color||'var(--muted)';}
+
+// ═══ INIT ═══
+renderLL();renderEP();
+setTimeout(()=>{resizeCv();render();},50);
+// Show CORS warning if opened via file://
+// CORS handled via proxy - works everywhere
+</script>
+</body>
+</html>
